@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Untitled</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>走慢 Slow Travel</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #F5F2EB;
+            --text-main: #4A4A4A;
+            --text-sub: #8C8C8C;
+            --accent: #B56C6C;
+            --delete-red: #ff4d4d;
+            
+            /* 極致透明玻璃變數 */
+            --glass-bg: rgba(255, 255, 255, 0.55);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.65);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+            --backdrop-blur: blur(15px);
+            --card-radius: 20px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            /* 背景流動光暈 */
+            background-image: 
+                radial-gradient(at 10% 10%, rgba(181, 108, 108, 0.08) 0px, transparent 50%),
+                radial-gradient(at 90% 90%, rgba(90, 143, 204, 0.08) 0px, transparent 50%);
+            background-attachment: fixed;
+            padding-bottom: 100px;
+        }
+
+        .app-container { max-width: 480px; margin: 0 auto; padding: 20px; }
+
+        /* --- 共用類別 --- */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: var(--card-radius);
+        }
+
+        /* --- Header & SOS --- */
+        .main-header { text-align: center; padding: 10px 0 15px 0; position: relative; }
+        h1 { font-family: 'Shippori Mincho', serif; font-size: 2.2rem; margin: 0; letter-spacing: 0.15em; color: var(--text-main); }
+        .subtitle { font-size: 0.9rem; color: var(--text-sub); letter-spacing: 0.2em; margin-top: 5px; }
+        
+        .sos-btn {
+            position: absolute; top: 10px; right: 0;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255, 80, 80, 0.1); border: 1px solid rgba(255, 80, 80, 0.3);
+            color: #d9534f; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 100;
+        }
+
+        /* --- Weather --- */
+        .weather-section { margin-bottom: 20px; }
+        .weather-label { font-size: 0.7rem; color: var(--text-sub); margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; padding-left: 5px; }
+        .weather-pill { padding: 15px 20px; display: flex; gap: 20px; overflow-x: auto; scrollbar-width: none; }
+        .w-item { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 50px; flex-shrink: 0; }
+        .w-time { font-size: 0.75rem; color: #999; }
+        .w-icon { font-size: 1.4rem; margin: 2px 0; }
+        .w-temp { font-size: 0.9rem; font-weight: 600; color: #555; }
+
+        /* --- Date & Top Actions Nav --- */
+        .nav-bar-wrapper { display: flex; align-items: center; margin-bottom: 25px; gap: 10px; }
+        .date-scroller { flex: 1; display: flex; overflow-x: auto; gap: 12px; padding-bottom: 5px; scrollbar-width: none; }
+        .date-item { min-width: 50px; text-align: center; opacity: 0.4; transition: all 0.3s; cursor: pointer; }
+        .date-item.active { opacity: 1; transform: scale(1.1); }
+        .date-day { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+        .date-num { font-family: 'Shippori Mincho', serif; font-size: 1.8rem; line-height: 1; }
+        .date-dot { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; margin: 5px auto 0; opacity: 0; }
+        .date-item.active .date-dot { opacity: 1; }
+        
+        .action-btns-container { display: flex; gap: 5px; border-left: 1px solid rgba(0,0,0,0.1); padding-left: 10px; }
+        .nav-action-btn { width: 45px; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+        .exp-icon { font-size: 1.3rem; color: var(--text-main); }
+        .exp-label { font-size: 0.65rem; color: var(--text-sub); margin-top: 4px; }
+
+        /* --- Status Cards --- */
+        .status-row { display: flex; gap: 15px; margin-bottom: 25px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+        .status-card { flex: 1; min-width: 160px; padding: 20px; text-align: center; cursor: pointer; transition: transform 0.1s; }
+        .status-card:active { transform: scale(0.98); }
+        .sc-head { font-size: 0.7rem; color: #999; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .sc-body { font-family: 'Shippori Mincho', serif; font-size: 1.4rem; color: #333; margin-bottom: 5px; }
+        .sc-foot { font-size: 0.8rem; color: #5a8fcc; text-decoration: underline; }
+
+        /* --- Timeline --- */
+        #itinerary-container { margin-top: 20px; min-height: 300px; }
+        .timeline-item { display: flex; margin-bottom: 25px; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .tl-time { width: 55px; text-align: right; padding-right: 15px; font-family: 'Shippori Mincho'; font-size: 1.1rem; color: var(--text-main); padding-top: 15px; flex-shrink: 0; position: relative; }
+        .tl-time::after { content: ''; position: absolute; right: -5px; top: 24px; width: 9px; height: 9px; background: #F5F2EB; border: 2px solid var(--accent); border-radius: 50%; z-index: 2; }
+        .tl-content { flex: 1; padding-left: 15px; position: relative; border-left: 1px solid rgba(0,0,0,0.1); padding-bottom: 20px; }
+        .tl-content:last-child { border-left: none; }
+        .tl-card { padding: 15px 20px; transition: transform 0.1s; position: relative; z-index: 10; }
+        .tl-card:active { transform: scale(0.99); }
+        .tl-tag { font-size: 0.65rem; color: white; background: var(--accent); padding: 3px 8px; border-radius: 8px; display: inline-block; margin-bottom: 6px; }
+        .tl-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; color: #333; }
+        .tl-desc { font-size: 0.85rem; color: var(--text-sub); line-height: 1.5; white-space: pre-line; }
+        .tl-nav-btn { display: inline-block; margin-top: 10px; font-size: 0.8rem; color: var(--accent); border-bottom: 1px dashed var(--accent); font-weight: bold; }
+
+        /* --- Modals (Full Screen Glass) --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(245, 242, 235, 0.95); backdrop-filter: blur(20px); z-index: 1000; display: none; flex-direction: column; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        /* 全新升級的返回按鈕設計 */
+        .modal-header { 
+            padding: 20px 20px 10px 20px; display: flex; justify-content: flex-start; 
+            position: sticky; top: 0; z-index: 100; 
+            /* 防遮擋技術：讓標頭容器本身不阻擋點擊，只讓裡面的按鈕可點擊 */
+            pointer-events: none; 
+        }
+        .modal-back-btn { 
+            pointer-events: auto; /* 確保按鈕絕對可以點擊 */
+            display: inline-flex; align-items: center; gap: 6px; 
+            font-size: 0.95rem; color: var(--text-main); cursor: pointer; 
+            padding: 10px 18px; background: rgba(255,255,255,0.9); 
+            border-radius: 20px; border: 1px solid rgba(255,255,255,1); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-weight: bold; 
+            backdrop-filter: blur(10px); transition: transform 0.2s;
+        }
+        .modal-back-btn:active { transform: scale(0.95); }
+
+        .modal-body { padding: 0 25px 80px 25px; overflow-y: auto; flex: 1; }
+
+        /* --- Ticket Wallet Styles --- */
+        .ticket-folder-btn { background: var(--glass-bg); backdrop-filter: var(--backdrop-blur); border: var(--glass-border); border-radius: 20px; padding: 25px; margin-bottom: 15px; text-align: center; cursor: pointer; font-family: 'Shippori Mincho'; font-size: 1.3rem; color: var(--text-main); box-shadow: var(--glass-shadow); transition: transform 0.2s; }
+        .ticket-folder-btn:active { transform: scale(0.98); }
+        .back-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 0.9rem; color: var(--accent); cursor: pointer; margin-bottom: 20px; padding: 6px 15px; background: rgba(255,255,255,0.7); border-radius: 20px; border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .ticket-card { display: flex; align-items: center; padding: 20px; margin-bottom: 15px; cursor: pointer; transition: transform 0.2s; }
+        .ticket-card:active { transform: scale(0.98); }
+        .tc-icon { font-size: 2.2rem; margin-right: 15px; }
+        .tc-info { flex: 1; }
+        .tc-title { font-weight: bold; font-size: 1.1rem; color: #333; margin-bottom: 3px; }
+        .tc-sub { font-size: 0.8rem; color: #777; }
+        .tc-date { font-family: 'Shippori Mincho'; font-size: 0.85rem; color: var(--accent); margin-top: 5px; }
+        .tc-action { background: var(--accent); color: white; padding: 6px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+
+        /* QR Show Modal */
+        .qr-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .qr-box { background: white; padding: 25px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; max-height: 90vh; display: flex; flex-direction: column; }
+        .qr-title { font-weight: bold; font-size: 1.2rem; color: #333; margin-bottom: 5px; flex-shrink: 0; }
+        .qr-sub { font-size: 0.85rem; color: #888; margin-bottom: 15px; flex-shrink: 0; }
+        .qr-image { width: 100%; flex: 1; min-height: 250px; max-height: 60vh; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 10px; border: 1px dashed #ccc; margin-bottom: 15px;}
+        .qr-image img { width: 100%; height: 100%; object-fit: contain; }
+        .qr-upload-btn { background: #5a8fcc; color: white; padding: 12px; border-radius: 12px; font-size: 0.9rem; cursor: pointer; font-weight: bold; display: block; margin-bottom: 10px;}
+        .qr-close { margin-top: 10px; color: white; border: 1px solid white; padding: 8px 25px; border-radius: 20px; cursor: pointer; flex-shrink: 0; }
+
+        /* --- Expense Styles --- */
+        .expense-dashboard { text-align: center; padding: 30px 20px; margin-bottom: 20px; }
+        .exp-total-label { font-size: 0.8rem; color: #888; letter-spacing: 1px; }
+        .exp-total-amount { font-family: 'Shippori Mincho'; font-size: 2.5rem; font-weight: bold; margin: 5px 0; }
+        .exp-avg { font-size: 0.9rem; color: #666; background: rgba(255,255,255,0.5); padding: 5px 15px; border-radius: 20px; display: inline-block; }
+        
+        .exp-swipe-wrapper { position: relative; overflow-x: auto; scrollbar-width: none; border-radius: 20px; margin-bottom: 12px; display: flex; scroll-snap-type: x mandatory; }
+        .exp-swipe-wrapper::-webkit-scrollbar { display: none; }
+        .exp-list-item { min-width: 100%; scroll-snap-align: start; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--glass-bg); backdrop-filter: var(--backdrop-blur); border: var(--glass-border); box-sizing: border-box; }
+        .exp-delete-action { min-width: 80px; background: var(--delete-red); color: white; display: flex; align-items: center; justify-content: center; scroll-snap-align: end; font-weight: bold; cursor: pointer; white-space: nowrap; }
+        .exp-item-left { display: flex; align-items: center; gap: 15px; }
+        .exp-item-icon { font-size: 1.5rem; width: 40px; text-align: center; }
+        .exp-item-info h4 { margin: 0; font-size: 1rem; color: #333; }
+        .exp-payer-badge { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; color: #666; }
+        .exp-item-amt { font-family: 'Shippori Mincho'; font-weight: bold; color: var(--text-main); }
+
+        .add-exp-form { margin-top: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 8px; }
+        .form-input { width: 100%; border: none; background: rgba(255,255,255,0.5); padding: 15px; border-radius: 12px; font-size: 1.1rem; outline: none; font-family: 'Zen Maru Gothic'; }
+        .amount-input-group { display: flex; gap: 10px; align-items: center; }
+        .converted-display { text-align: right; font-size: 0.9rem; color: var(--accent); margin-top: 5px; font-weight: bold; }
+        .user-bubbles { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .user-bubble { width: 45px; height: 45px; border-radius: 50%; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: #666; cursor: pointer; background: rgba(255,255,255,0.5); flex-shrink: 0; }
+        .user-bubble.selected { background: var(--text-main); color: white; border-color: var(--text-main); }
+        .save-btn { width: 100%; background: var(--text-main); color: white; padding: 15px; border-radius: 12px; border: none; font-size: 1rem; cursor: pointer; margin-top: 20px; }
+
+        /* --- Floating Calc --- */
+        .fab-calc { position: fixed; bottom: 30px; right: 30px; width: 64px; height: 64px; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0.2)); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.5); border-top: 1px solid rgba(255,255,255,0.9); border-bottom: 1px solid rgba(255,255,255,0.2); border-radius: 50%; box-shadow: 0 15px 35px rgba(0,0,0,0.15), inset 0 0 15px rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; font-size: 28px; z-index: 500; cursor: pointer; transition: transform 0.2s; }
+        .fab-calc:active { transform: scale(0.9); }
+        .calc-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); backdrop-filter: blur(5px); z-index: 2500; display: none; justify-content: center; align-items: center; }
+        .calc-box { background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border-radius: 30px; padding: 25px; width: 320px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.15); }
+        .calc-input-d { width: 100%; border: none; background: transparent; font-size: 2.5rem; text-align: right; font-family: 'Shippori Mincho'; margin-bottom: 10px; outline: none; }
+        .calc-res-d { text-align: right; color: var(--accent); font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; border-top: 1px solid #ddd; padding-top: 10px; }
+        .calc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .c-btn { padding: 15px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.5); background: rgba(255,255,255,0.4); font-size: 1.3rem; cursor: pointer; }
+        .calc-tax-btn { grid-column: span 3; background: rgba(181, 108, 108, 0.1); color: var(--accent); border-color: var(--accent); font-size: 0.9rem; margin-bottom: 5px; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.9rem; z-index: 3000; opacity: 0; transition: opacity 0.3s; pointer-events: none; backdrop-filter: blur(5px); }
+        .toast.show { opacity: 1; }
+
+        /* Details Modal Content */
+        .dt-tag { border: 1px solid var(--accent); color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; display: inline-block; margin-bottom: 15px; }
+        .dt-title { font-family: 'Shippori Mincho'; font-size: 1.8rem; margin-bottom: 10px; line-height: 1.3; }
+        .dt-section { margin-bottom: 20px; }
+        .dt-subtitle { font-weight: bold; border-left: 3px solid var(--accent); padding-left: 8px; margin-bottom: 5px; color:#444; }
+        .dt-text { font-size: 0.95rem; color: #666; line-height: 1.6; }
+        .menu-box { background: rgba(255,255,255,0.6); border: 1px solid #eee; border-radius: 15px; padding: 15px; margin: 15px 0; }
+        .menu-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #bbb; cursor: pointer; }
+        .big-text-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .big-jp { font-family: 'Shippori Mincho'; font-size: 3rem; writing-mode: vertical-rl; text-orientation: upright; font-weight: bold; }
+        
+        .flight-detail-card { background: #2A2A2A; color: #E0E0E0; border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .fd-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .fd-code { font-size: 2rem; font-weight: bold; color: white; font-family: 'Shippori Mincho'; }
+        .fd-time { font-size: 1.8rem; color: #5a8fcc; font-weight: bold; }
+        .stay-detail-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .sd-btn { display: inline-block; padding: 8px 20px; background: #5a8fcc; color: white; border-radius: 20px; text-decoration: none; font-size: 0.9rem; margin-top: 10px; cursor: pointer; }
+        .sos-card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; border-left: 5px solid #d9534f; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .sos-jp { font-family: 'Shippori Mincho'; font-size: 1.3rem; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="main-header">
+        <h1>走慢</h1>
+        <div class="subtitle">京阪七日慢旅</div>
+        <div class="sos-btn" onclick="document.getElementById('sosModal').style.display='flex'">🆘</div>
+    </div>
+
+    <div class="weather-section">
+        <div class="weather-label">24H Weather Forecast</div>
+        <div class="weather-pill glass" id="weather-scroll-container"></div>
+    </div>
+
+    <div class="nav-bar-wrapper">
+        <div class="date-scroller" id="date-scroller"></div>
+        <div class="action-btns-container">
+            <div class="nav-action-btn" onclick="openTicketModal()">
+                <div class="exp-icon">🎫</div>
+                <div class="exp-label">票券</div>
+            </div>
+            <div class="nav-action-btn" onclick="openExpenseModal()">
+                <div class="exp-icon">📝</div>
+                <div class="exp-label">帳本</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-row">
+        <div class="status-card glass" onclick="showModal('flight-details')">
+            <div class="sc-head"><span style="font-size:1.2rem;">✈️</span> FLIGHT</div>
+            <div class="sc-body">CI 172</div>
+            <div class="sc-foot">TPE → KIX</div>
+        </div>
+        <div class="status-card glass" onclick="showModal('stay-details')">
+            <div class="sc-head"><span style="font-size:1.2rem;">🏨</span> STAY</div>
+            <div class="sc-body" style="font-size:1.1rem;">Hotel Excellence</div>
+            <div class="sc-foot">圓町站</div>
+        </div>
+    </div>
+
+    <div id="itinerary-container"></div>
+</div>
+
+<div class="modal-overlay" id="ticketModal">
+    <div class="modal-header"><div class="modal-back-btn" onclick="closeModal('ticketModal')">⬅ 返回</div></div>
+    <div class="modal-body" id="ticket-list-container"></div>
+</div>
+
+<div class="qr-overlay" id="qrModal">
+    <div class="qr-box">
+        <div class="qr-title" id="qr-title-display">票券名稱</div>
+        <div class="qr-sub" id="qr-sub-display">副標題</div>
+        
+        <div class="qr-image">
+            <img id="qr-img-display" src="" alt="請上傳您的票券截圖" style="display: none;">
+            <div id="qr-empty-hint" style="color:#aaa; font-size:0.9rem;">🖼️ 尚未上傳票券照片</div>
+        </div>
+        
+        <label class="qr-upload-btn">
+            <span id="qr-upload-text">點此選擇手機相簿圖片</span>
+            <input type="file" accept="image/*" style="display:none;" onchange="handleQRUpload(event)">
+        </label>
+        <div style="color: var(--accent); font-size: 0.75rem; margin-top: 5px;">💡 圖片將自動記憶在您的手機中</div>
+    </div>
+    <div class="qr-close" onclick="document.getElementById('qrModal').style.display='none'">關閉</div>
+</div>
+
+<div class="modal-overlay" id="expenseModal">
+    <div class="modal-header"><div class="modal-back-btn" onclick="closeModal('expenseModal')">⬅ 返回</div></div>
+    <div class="modal-body">
+        <div class="glass expense-dashboard">
+            <div class="exp-total-label">總金額 (台幣)</div>
+            <div class="exp-total-amount" id="total-expense-display">NT$ 0</div>
+            <div class="exp-avg">每人均攤: <span id="avg-expense-display">0</span></div>
+        </div>
+        <div style="text-align:center; font-size:0.7rem; color:#aaa; margin-bottom:10px;">← 往左滑動項目可刪除</div>
+        <div id="expense-list-container"></div>
+        <div style="height: 1px; background: rgba(0,0,0,0.1); margin: 30px 0;"></div>
+        <h3 style="font-family:'Shippori Mincho'; margin-bottom:15px;">新增款項</h3>
+        <div class="add-exp-form">
+            <input type="text" id="exp-title" class="form-input" placeholder="項目名稱 (例如：晚餐)">
+            <div class="user-bubbles" id="category-selector">
+                <div class="user-bubble selected" onclick="selectCategory(this, '🍽️')">🍽️</div>
+                <div class="user-bubble" onclick="selectCategory(this, '🛒')">🛒</div>
+                <div class="user-bubble" onclick="selectCategory(this, '🚗')">🚗</div>
+                <div class="user-bubble" onclick="selectCategory(this, '🎫')">🎫</div>
+                <div class="user-bubble" onclick="selectCategory(this, '🏨')">🏨</div>
+            </div>
+            <div class="amount-input-group">
+                <input type="number" id="exp-amount-jpy" class="form-input" style="margin-bottom:0;" placeholder="金額 (日幣)" oninput="calculateTWD()">
+                <span style="font-size: 0.9rem; color: #888;">JPY</span>
+            </div>
+            <div style="text-align: right; font-size: 0.9rem; color: var(--accent); margin: 5px 0 15px 0; font-weight: bold;" id="exp-amount-twd">≈ NT$ 0</div>
+            
+            <div style="font-size: 0.8rem; color: #888; margin-bottom: 8px;">付款人</div>
+            <div class="user-bubbles" id="payer-selector"></div>
+            <button class="save-btn" onclick="saveExpense()">儲存記帳</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="detailModal">
+    <div class="modal-header"><div class="modal-back-btn" onclick="closeModal('detailModal')">⬅ 返回</div></div>
+    <div class="modal-body" id="detailContent"></div>
+</div>
+
+<div class="modal-overlay" id="infoModal">
+    <div class="modal-header"><div class="modal-back-btn" onclick="closeModal('infoModal')">⬅ 返回</div></div>
+    <div class="modal-body" id="infoContent"></div>
+</div>
+
+<div class="modal-overlay" id="sosModal">
+    <div class="modal-header"><div class="modal-back-btn" onclick="closeModal('sosModal')">⬅ 返回</div></div>
+    <div class="modal-body">
+        <h3 style="text-align:center; font-family:'Shippori Mincho'; color:#d9534f; margin-bottom:20px;">緊急救援卡</h3>
+        <div style="background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; border-left: 5px solid #d9534f;">
+            <div style="font-size:0.8rem; color:#999;">給計程車司機 (京都)</div>
+            <div style="font-family:'Shippori Mincho'; font-size:1.3rem; margin-top:5px;">圓町駅近くのホテルまでお願いします。</div>
+        </div>
+        <div style="background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; border-left: 5px solid #d9534f;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span style="font-weight:bold;">救護車 / 火警</span><a href="tel:119" style="background:#d9534f; color:white; padding:5px 15px; border-radius:15px; text-decoration:none;">119</a>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:bold;">報警 (Police)</span><a href="tel:110" style="background:#d9534f; color:white; padding:5px 15px; border-radius:15px; text-decoration:none;">110</a>
+            </div>
+        </div>
+        <div style="background: white; border-radius: 20px; padding: 20px; border-left: 5px solid #5a8fcc;">
+            <div style="font-size:0.8rem; color:#999;">台北駐大阪辦事處 (急難)</div>
+            <div style="font-weight:bold; font-size:1.2rem; margin:5px 0;">090-8794-4568</div>
+            <a href="tel:+81-90-8794-4568" style="background:#5a8fcc; color:white; padding:8px; border-radius:15px; text-decoration:none; display:block; text-align:center;">撥打緊急電話</a>
+        </div>
+    </div>
+</div>
+
+<div class="fab-calc" onclick="document.getElementById('calcModal').style.display='flex'">🧮</div>
+<div class="calc-overlay" id="calcModal" onclick="if(event.target===this) this.style.display='none'">
+    <div style="background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border-radius: 30px; padding: 25px; width: 320px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.15);">
+        <input type="text" id="calcIn" style="width: 100%; border: none; background: transparent; font-size: 2.5rem; text-align: right; font-family: 'Shippori Mincho'; margin-bottom: 10px; outline: none;" placeholder="0" readonly>
+        <div id="calcOut" style="text-align: right; color: var(--accent); font-weight: bold; font-size: 1.2rem; margin-bottom: 20px; border-top: 1px solid #ddd; padding-top: 10px;">≈ TWD 0</div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <button style="grid-column: span 3; background: rgba(181, 108, 108, 0.1); color: var(--accent); border: 1px solid var(--accent); padding:10px; border-radius:15px; font-size: 0.9rem; cursor:pointer;" onclick="calcTaxFree()">免稅計算 (÷1.1)</button>
+            <button class="c-btn" onclick="addNum(7)">7</button><button class="c-btn" onclick="addNum(8)">8</button><button class="c-btn" onclick="addNum(9)">9</button>
+            <button class="c-btn" onclick="addNum(4)">4</button><button class="c-btn" onclick="addNum(5)">5</button><button class="c-btn" onclick="addNum(6)">6</button>
+            <button class="c-btn" onclick="addNum(1)">1</button><button class="c-btn" onclick="addNum(2)">2</button><button class="c-btn" onclick="addNum(3)">3</button>
+            <button class="c-btn" style="color:var(--accent)" onclick="clearCalc()">C</button><button class="c-btn" onclick="addNum(0)">0</button><button class="c-btn" onclick="backCalc()">⌫</button>
+        </div>
+    </div>
+</div>
+
+<div class="big-text-modal" id="bigTextModal" onclick="this.style.display='none'"><div class="big-jp" id="bigJpText"></div><div style="color:#999; margin-top:30px; font-size:0.9rem;">點擊關閉</div></div>
+<div id="toast" class="toast">✅ 已儲存</div>
+
+<script>
+    // --- 1. Weather ---
+    function renderWeather() {
+        const c = document.getElementById('weather-scroll-container');
+        let h = ''; const now = new Date().getHours();
+        for(let i=0; i<24; i++){
+            let n = (now+i)%24; let tStr = i===0?"現在":`${String(n).padStart(2,'0')}:00`;
+            let icon = (n>=6&&n<18)?"☀️":"🌙"; let temp = 15 - Math.abs(n-14)*0.5;
+            h += `<div class="w-item"><div class="w-time">${tStr}</div><div class="w-icon">${icon}</div><div class="w-temp">${Math.round(temp)}°</div></div>`;
+        }
+        c.innerHTML = h;
+    }
+    renderWeather();
+
+    // --- 2. Itinerary Data ---
+    const allItinerary = [
+        { dateId: "0408", items: [ { time: "10:00", tag: "Start", title: "台中出發", desc: "高鐵往桃園 (10:20 班次)。" }, { time: "11:50", tag: "Flight", title: "抵達桃園機場 (T2)", desc: "14:20 起飛。建議提早 2.5 小時。" }, { time: "18:05", tag: "Arrival", title: "抵達關西機場", desc: "入境通關約需 40-60 分鐘。" }, { time: "19:16", tag: "Transport", title: "HARUKA 往京都", desc: "車程約 80 分鐘。行李放車廂前後。", detail: {address: "關西機場 JR 站", desc: "推薦搭乘 19:16 或 19:46 班次。"} }, { time: "21:00", tag: "Hotel", title: "前往飯店", desc: "京都站轉乘 JR 山陰本線 → 圓町站。", detail:{address:"Hotel Excellence Enmachi Ekimae", desc:"圓町站步行2分鐘。"} }, { time: "21:30", tag: "Food", title: "超商盛宴", desc: "7-11 / Lawson 必買。", detail:{address:"飯店附近", desc:"7-11: 鮭魚飯糰、炸雞。\nLawson: 炸雞君(Red)、生乳捲。"} } ] },
+        { dateId: "0409", items: [ { time: "08:00", tag: "Start", title: "前往伏見稻荷", desc: "圓町 → 京都 → 稻荷 (JR)。" }, { time: "08:30", tag: "Food", title: "Vermillion Cafe", desc: "🕐09:00-17:00\n伏見稻荷旁的咖啡廳。", detail:{address:"5-31 Fukakusa", menu:[{zh:"拿鐵", jp:"カフェラテ"}]} }, { time: "09:00", tag: "Sightseeing", title: "伏見稻荷大社", desc: "千本鳥居。參拜攻略。", detail:{address:"Fushimi Inari Taisha", desc:"必買：白狐守。"} }, { time: "11:00", tag: "Food", title: "午餐二選一", desc: "Kendonya 烏龍麵 / 京都勝牛。" }, { time: "13:30", tag: "Sightseeing", title: "清水寺散策", desc: "清水寺 → 二三年坂 → 祇園。" }, { time: "14:00", tag: "Shop", title: "伊藤久右衛門", desc: "🕐10:00-18:00\n抹茶聖代冰棒。", detail:{address:"2 Chome Kiyomizu", menu:[{zh:"抹茶冰棒", jp:"抹茶パフェバー"}]} }, { time: "14:20", tag: "Shop", title: "本家西尾八ッ橋", desc: "🕐08:30-17:30\n必買：生八橋。", detail:{address:"清水１丁目277", menu:[{zh:"生八橋", jp:"生八ッ橋"}]} }, { time: "15:00", tag: "Shop", title: "here Kyoto", desc: "🕐09:00-18:00\n必吃可麗露。", detail:{address:"清水２丁目226", menu:[{zh:"可麗露", jp:"カヌレ"}]} }, { time: "16:00", tag: "Shop", title: "Gion Anon", desc: "🕐12:00-17:30\n紅豆起司最中。", detail:{address:"清本町368-2", menu:[{zh:"最中", jp:"あんぽーね"}]} }, { time: "17:30", tag: "Food", title: "OAGARI", desc: "🕐17:00-22:00\n炙燒和牛 (需預約)。", detail:{address:"Gion", menu:[{zh:"和牛", jp:"和牛"}]} } ] },
+        { dateId: "0410", items: [ { time: "08:30", tag: "Sightseeing", title: "御金神社", desc: "洗錢求財運。" }, { time: "09:00", tag: "Shop", title: "松榮堂", desc: "🕐09:00-18:00\n線香老舖。" }, { time: "10:00", tag: "Shop", title: "辻和金網", desc: "🕐09:00-18:00\n手編金網。" }, { time: "11:15", tag: "Shop", title: "APFR Kyoto", desc: "🕐11:00-19:00\n香氛。" }, { time: "13:30", tag: "Sightseeing", title: "下鴨神社", desc: "森林與歷史。" }, { time: "14:15", tag: "Food", title: "Nakagawa Komugiten", desc: "🕐10:00-16:00\n麵包店。" }, { time: "14:45", tag: "Sightseeing", title: "河合神社", desc: "美人神。" }, { time: "15:40", tag: "Food", title: "Nanaya 抹茶", desc: "🕐10:00-18:00\n世界最濃No.7。" }, { time: "16:30", tag: "Shop", title: "BEAMS JAPAN", desc: "🕐11:00-20:00\n新風館 1F。" }, { time: "18:00", tag: "Food", title: "晚餐三選一", desc: "鳥岩樓 / Tokura / Shake Shack。" } ] },
+        { dateId: "0411", items: [ { time: "09:30", tag: "Luggage", title: "寄放行李", desc: "Crosta Kyoto (京都站 B1)。\n預約代號：u7-4zB6W。" }, { time: "10:00", tag: "Shop", title: "Le Labo Kyoto", desc: "🕐10:00-20:00\n京都限定香。" }, { time: "11:00", tag: "Shop", title: "LoRE hair", desc: "買京喚羽護髮。" }, { time: "11:30", tag: "Shop", title: "OS Drug", desc: "藥妝採購 (DHC)。" }, { time: "12:30", tag: "Food", title: "Gion Duck Rice", desc: "🕐11:00-15:00\n鴨肉飯。" }, { time: "15:00", tag: "Transport", title: "前往大阪", desc: "JR京都線 (新快速) → 大阪站 → 櫻川。" }, { time: "17:30", tag: "Food", title: "牛たんの檸檬", desc: "🕐17:00-22:00\n極厚牛舌 (需預約)。" } ] },
+        { dateId: "0412", items: [ { time: "08:30", tag: "Food", title: "木津市場", desc: "海鮮丼早餐。" }, { time: "13:00", tag: "Shop", title: "梅田購物", desc: "LUCUA, 阪急。" }, { time: "18:00", tag: "Food", title: "Izumo 鰻魚飯", desc: "🕐11:00-23:00\n巨無霸鰻玉丼。" } ] },
+        { dateId: "0413", items: [ { time: "07:30", tag: "Play", title: "USJ 入園", desc: "直衝任天堂。" } ] },
+        { dateId: "0414", items: [ { time: "08:30", tag: "Food", title: "Bread, Espresso", desc: "厚切吐司早餐。" }, { time: "09:10", tag: "Sightseeing", title: "御津八幡宮", desc: "寵物神社。" }, { time: "12:30", tag: "Food", title: "敘敘苑燒肉", desc: "大丸心齋橋 10F。" }, { time: "15:00", tag: "Transport", title: "前往關西機場", desc: "南海電鐵 Rapi:t (難波站)。" }, { time: "19:05", tag: "Flight", title: "CI 173 起飛", desc: "KIX → TPE (21:10抵達)。" } ] }
+    ];
+
+    const dates = [ {d:"DAY 1", n:"08", id:"0408"}, {d:"DAY 2", n:"09", id:"0409"}, {d:"DAY 3", n:"10", id:"0410"}, {d:"DAY 4", n:"11", id:"0411"}, {d:"DAY 5", n:"12", id:"0412"}, {d:"DAY 6", n:"13", id:"0413"}, {d:"DAY 7", n:"14", id:"0414"} ];
+    let currentDateId = "0408";
+
+    function init() { renderDateNav(); renderItinerary(); }
+
+    function renderDateNav() {
+        const c = document.getElementById('date-scroller'); let h = '';
+        dates.forEach((d) => {
+            let active = d.id === currentDateId ? 'active' : '';
+            h += `<div class="date-item ${active}" onclick="switchDate('${d.id}')"><div class="date-day">${d.d}</div><div class="date-num">${d.n}</div><div class="date-dot"></div></div>`;
+        });
+        c.innerHTML = h;
+    }
+
+    function switchDate(id) { currentDateId = id; renderDateNav(); renderItinerary(); }
+
+    function renderItinerary() {
+        const c = document.getElementById('itinerary-container');
+        const dayData = allItinerary.find(d => d.dateId === currentDateId);
+        if(!dayData) { c.innerHTML = '<div style="text-align:center;color:#aaa;padding:20px;">無行程</div>'; return; }
+        
+        let h = '';
+        dayData.items.forEach(item => {
+            const hasDetail = !!item.detail;
+            const detailStr = hasDetail ? encodeURIComponent(JSON.stringify(item.detail)) : '';
+            
+            // 將 onClick 準確綁定在 tl-card 上，確保觸控不會失靈
+            h += `<div class="timeline-item">
+                    <div class="tl-time">${item.time}</div>
+                    <div class="tl-content">
+                        <div class="tl-card glass" ${hasDetail ? `onclick="openDetail(this)" style="cursor:pointer;"` : ''} data-title="${item.title}" data-tag="${item.tag}" data-detail="${detailStr}">
+                            <div class="tl-tag">${item.tag}</div>
+                            <div class="tl-title">${item.title}</div>
+                            <div class="tl-desc">${item.desc}</div>
+                            ${hasDetail ? '<div class="tl-nav-btn">查看詳情 ➔</div>' : ''}
+                        </div>
+                    </div>
+                  </div>`;
+        });
+        c.innerHTML = h;
+    }
+
+    // --- 3. Ticket Wallet (相簿上傳版) ---
+    const tickets = {
+        bing: [
+            { id: "b_tk1", icon: "🚆", title: "HARUKA 關空特急", sub: "關西機場 → 京都", date: "2026/04/08" },
+            { id: "b_tk2", icon: "🎢", title: "USJ 環球影城 門票", sub: "1日券 (成人) - 餅", date: "2026/04/13" }
+        ],
+        you: [
+            { id: "y_tk1", icon: "🚆", title: "HARUKA 關空特急", sub: "關西機場 → 京都", date: "2026/04/08" },
+            { id: "y_tk2", icon: "🎢", title: "USJ 環球影城 門票", sub: "1日券 (成人) - 柚", date: "2026/04/13" }
+        ]
+    };
+    
+    let currentUploadTicketId = "";
+
+    function openTicketModal() { renderTicketFolders(); document.getElementById('ticketModal').style.display = 'flex'; }
+
+    function renderTicketFolders() {
+        const c = document.getElementById('ticket-list-container');
+        c.innerHTML = `
+            <h3 style="font-family:'Shippori Mincho'; margin-bottom:20px; text-align:center;">我的票券夾</h3>
+            <div class="ticket-folder-btn" onclick="showTicketFolder('bing')">📁 餅 的專屬票券</div>
+            <div class="ticket-folder-btn" onclick="showTicketFolder('you')">📁 柚 的專屬票券</div>
+        `;
+    }
+
+    function showTicketFolder(owner) {
+        const c = document.getElementById('ticket-list-container');
+        const ownerName = owner === 'bing' ? '餅' : '柚';
+        const data = tickets[owner];
+        
+        let h = `<div class="back-btn" onclick="renderTicketFolders()">⬅ 返回資料夾</div>
+                 <h3 style="font-family:'Shippori Mincho'; margin-bottom:20px; text-align:center;">${ownerName} 的票券</h3>`;
+        
+        data.forEach(tk => {
+            h += `<div class="ticket-card glass" onclick="showQR('${tk.id}', '${tk.title}', '${tk.sub}')">
+                    <div class="tc-icon">${tk.icon}</div>
+                    <div class="tc-info"><div class="tc-title">${tk.title}</div><div class="tc-sub">${tk.sub}</div><div class="tc-date">${tk.date}</div></div>
+                    <div class="tc-action">出示</div>
+                  </div>`;
+        });
+        c.innerHTML = h;
+    }
+
+    function showQR(id, title, sub) {
+        currentUploadTicketId = id;
+        document.getElementById('qr-title-display').innerText = title;
+        document.getElementById('qr-sub-display').innerText = sub;
+        
+        // 檢查 LocalStorage 是否已有該票券的照片
+        const savedImg = localStorage.getItem('TicketPhoto_' + id);
+        const imgEl = document.getElementById('qr-img-display');
+        const emptyHint = document.getElementById('qr-empty-hint');
+        const btnText = document.getElementById('qr-upload-text');
+        
+        if (savedImg) {
+            imgEl.src = savedImg;
+            imgEl.style.display = 'block';
+            emptyHint.style.display = 'none';
+            btnText.innerText = "更換票券截圖";
+        } else {
+            imgEl.src = '';
+            imgEl.style.display = 'none';
+            emptyHint.style.display = 'block';
+            btnText.innerText = "點此從手機相簿上傳票券";
+        }
+        
+        document.getElementById('qrModal').style.display = 'flex';
+    }
+
+    // 處理圖片上傳並壓縮存入 LocalStorage
+    function handleQRUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                // 壓縮圖片以防 LocalStorage 爆滿
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800; // 安全寬度
+                let width = img.width;
+                let height = img.height;
+
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // 轉為 Base64 (0.8 代表 JPEG 壓縮率)
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                
+                try {
+                    localStorage.setItem('TicketPhoto_' + currentUploadTicketId, dataUrl);
+                    // 立即更新畫面
+                    const imgEl = document.getElementById('qr-img-display');
+                    imgEl.src = dataUrl;
+                    imgEl.style.display = 'block';
+                    document.getElementById('qr-empty-hint').style.display = 'none';
+                    document.getElementById('qr-upload-text').innerText = "更換票券截圖";
+                    showToast("✅ 照片已儲存");
+                } catch(err) {
+                    alert("手機儲存空間不足或圖片過大！");
+                }
+            }
+            img.src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+
+    // --- 4. Expense Tracker ---
+    const EX_RATE = 0.22;
+    let users = ["餅", "柚"]; 
+    let expenses = [];
+    let selectedCategory = "🍽️";
+    let selectedPayer = users[0];
+
+    if(localStorage.getItem('TripBook_Final_Fixed')) expenses = JSON.parse(localStorage.getItem('TripBook_Final_Fixed'));
+
+    function openExpenseModal() { document.getElementById('expenseModal').style.display = 'flex'; renderExpenseList(); renderUserBubbles(); updateSummary(); }
+
+    function renderUserBubbles() {
+        const c = document.getElementById('payer-selector'); c.innerHTML = '';
+        users.forEach(u => {
+            const d = document.createElement('div');
+            d.className = `user-bubble ${u===selectedPayer?'selected':''}`;
+            d.innerText = u; d.onclick = () => { selectedPayer=u; renderUserBubbles(); };
+            c.appendChild(d);
+        });
+    }
+
+    function selectCategory(el, icon) { document.querySelectorAll('#category-selector .user-bubble').forEach(b=>b.classList.remove('selected')); el.classList.add('selected'); selectedCategory=icon; }
+
+    function calculateTWD() { 
+        const jpy = document.getElementById('exp-amount-jpy').value;
+        document.getElementById('exp-amount-twd').innerText = "≈ NT$ " + (isNaN(jpy) || jpy === "" ? "0" : Math.round(jpy*EX_RATE).toLocaleString()); 
+    }
+
+    function saveExpense() {
+        const t = document.getElementById('exp-title').value;
+        const j = parseInt(document.getElementById('exp-amount-jpy').value);
+        if(!t || isNaN(j)) return alert("請輸入完整資料");
+        
+        // 生成唯一字串ID
+        const newId = "EXP_" + Date.now().toString() + "_" + Math.floor(Math.random()*1000);
+        expenses.unshift({ id: newId, title: t, cat: selectedCategory, payer: selectedPayer, twd: Math.round(j*EX_RATE) });
+        localStorage.setItem('TripBook_Final_Fixed', JSON.stringify(expenses));
+        renderExpenseList(); updateSummary();
+        document.getElementById('exp-title').value=""; document.getElementById('exp-amount-jpy').value="";
+        document.getElementById('exp-amount-twd').innerText = "≈ NT$ 0";
+        showToast("✅ 記帳成功");
+    }
+
+    function deleteExpense(id, event) {
+        if(event) event.stopPropagation(); 
+        expenses = expenses.filter(e => e.id !== id);
+        localStorage.setItem('TripBook_Final_Fixed', JSON.stringify(expenses));
+        renderExpenseList(); updateSummary(); showToast("🗑️ 已刪除");
+    }
+
+    function renderExpenseList() {
+        const c = document.getElementById('expense-list-container'); let h = '';
+        if(expenses.length === 0) { c.innerHTML = '<div style="text-align:center;color:#aaa;padding:20px;">尚無記帳資料</div>'; return; }
+        expenses.forEach(e => {
+            h += `<div class="exp-swipe-wrapper"><div class="exp-list-item"><div class="exp-item-left"><div class="exp-item-icon">${e.cat}</div><div class="exp-item-info"><h4>${e.title}</h4><p><span class="exp-payer-badge">${e.payer}</span>付</p></div></div><div class="exp-item-amt">$${e.twd.toLocaleString()}</div></div><div class="exp-delete-action" onclick="deleteExpense('${e.id}', event)">刪除</div></div>`;
+        });
+        c.innerHTML = h;
+    }
+
+    function updateSummary() {
+        let total = expenses.reduce((sum, e) => sum + e.twd, 0);
+        document.getElementById('total-expense-display').innerText = "NT$ " + total.toLocaleString();
+        document.getElementById('avg-expense-display').innerText = "NT$ " + (users.length>0 ? Math.round(total/users.length) : 0).toLocaleString();
+    }
+
+    function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+
+    // --- Modals & Calc ---
+    function showModal(t) {
+        if(t==='flight-details') { document.getElementById('infoContent').innerHTML = document.getElementById('flight-content-template').innerHTML; document.getElementById('infoModal').style.display='flex'; }
+        if(t==='stay-details') { document.getElementById('infoContent').innerHTML = document.getElementById('stay-content-template').innerHTML; document.getElementById('infoModal').style.display='flex'; }
+    }
+    function closeModal(id) { document.getElementById(id).style.display='none'; }
+    
+    // 防呆設計的 openDetail
+    function openDetail(el) {
+        try {
+            const detailStr = el.getAttribute('data-detail');
+            if (!detailStr) return;
+            const d = JSON.parse(decodeURIComponent(detailStr));
+            let h = `<div class="dt-title">${el.getAttribute('data-title')}</div>
+                     <div class="dt-tag">${el.getAttribute('data-tag')}</div>
+                     <p style="color:#666;margin-bottom:20px;">📍 ${d.address || '地址未提供'}</p>`;
+            if(d.menu && d.menu.length > 0) {
+                h+=`<div class="menu-box"><div style="text-align:center;font-size:0.8rem;color:#999;margin-bottom:10px;">點擊放大</div>`;
+                d.menu.forEach(m=> h+=`<div class="menu-row" onclick="showBig('${m.jp}')"><span class="m-zh">${m.zh}</span><span class="m-jp">${m.jp}</span></div>`);
+                h+=`</div>`;
+            }
+            if(d.sections && d.sections.length > 0) d.sections.forEach(s=> h+=`<div class="dt-section"><div class="dt-subtitle">${s.title}</div><div class="dt-text" style="white-space:pre-line">${s.text}</div></div>`);
+            if(d.desc && !d.sections) h+=`<div class="dt-text" style="white-space:pre-line">${d.desc}</div>`;
+            
+            if(d.address) {
+                const mapLink = `http://googleusercontent.com/maps.google.com/search?q=${encodeURIComponent(d.address)}`;
+                h+=`<div style="height:20px;"></div><a href="${mapLink}" target="_blank" class="sd-btn" style="text-align:center;display:block;text-decoration:none;color:white;background:#5a8fcc;padding:12px;border-radius:12px;">Google Map 導航</a>`;
+            }
+            
+            document.getElementById('detailContent').innerHTML = h;
+            document.getElementById('detailModal').style.display='flex';
+        } catch (e) {
+            console.error(e);
+            alert("載入詳情失敗，請稍後再試。");
+        }
+    }
+    function showBig(t) { document.getElementById('bigJpText').innerText=t; document.getElementById('bigTextModal').style.display='flex'; }
+    
+    let curVal=""; 
+    function addNum(n){if(curVal.length<8)curVal+=n;upCalc();}
+    function backCalc(){curVal=curVal.slice(0,-1);upCalc();}
+    function clearCalc(){curVal="";upCalc();}
+    function calcTaxFree(){
+        let v=parseInt(curVal);
+        if(!isNaN(v) && v>0){
+            let t=Math.round(v/1.1); curVal=t.toString();
+            document.getElementById('calcIn').value=curVal+" (未稅)"; document.getElementById('calcOut').innerText="≈ TWD "+Math.round(t*EX_RATE).toLocaleString();
+            setTimeout(()=>{ if(curVal===t.toString()) document.getElementById('calcIn').value=curVal; }, 2000);
+        }
+    }
+    function upCalc(){
+        const v=parseInt(curVal); 
+        document.getElementById('calcIn').value=curVal;
+        document.getElementById('calcOut').innerText="≈ TWD "+(isNaN(v)?0:Math.round(v*EX_RATE).toLocaleString());
+    }
+
+    init();
+</script>
+
+<div id="flight-content-template" style="display:none;">
+    <h3 style="text-align:center;font-family:'Shippori Mincho';margin-bottom:20px;">航班資訊</h3>
+    <div class="flight-detail-card"><div class="fd-row"><span class="fd-code">TPE</span><span style="color:#888;">2h 45m</span><span class="fd-code">KIX</span></div><div class="fd-row"><div class="fd-time">14:20</div><div class="fd-time">18:05</div></div><div style="color:#888;font-size:0.8rem;display:flex;justify-content:space-between;"><span>04/08 T2</span><span>CI 172</span><span>04/08 T1</span></div></div>
+    <div class="flight-detail-card"><div class="fd-row"><span class="fd-code">KIX</span><span style="color:#888;">3h 05m</span><span class="fd-code">TPE</span></div><div class="fd-row"><div class="fd-time">19:05</div><div class="fd-time">21:10</div></div><div style="color:#888;font-size:0.8rem;display:flex;justify-content:space-between;"><span>04/14 T1</span><span>CI 173</span><span>04/14 T2</span></div></div>
+</div>
+<div id="stay-content-template" style="display:none;">
+    <h3 style="text-align:center;font-family:'Shippori Mincho';margin-bottom:20px;">住宿資訊</h3>
+    <div class="stay-detail-card"><div style="font-weight:bold;font-size:1.2rem;">Hotel Excellence</div><div style="color:#666;margin:10px 0;">Nakagyo-ku nishinokyo enmachi 30-2</div><a href="http://googleusercontent.com/maps.google.com/search?q=Hotel+Excellence+Enmachi+Ekimae" target="_blank" class="sd-btn">導航</a></div>
+    <div class="stay-detail-card"><div style="font-weight:bold;font-size:1.2rem;">大阪 Airbnb</div><div style="color:#666;margin:10px 0;">2-chōme-9-24 Sakuragawa</div><a href="http://googleusercontent.com/maps.google.com/search?q=2-chome-9-24+Sakuragawa+Naniwa+Ward+Osaka" target="_blank" class="sd-btn">導航</a></div>
+</div>
+
+</body>
+</html>
+    
+  </body>
+  
+</html>
